@@ -12,3 +12,6 @@ updater.start_webhook(listen="0.0.0.0", port=int(PORT), url_path=TOKEN, webhook_
 _Sau khi hoàn thành việc bổ sung mã TOKEN và đường dẫn webhook thì tiến hành bước 3_
 
 3. Vào app vừa tạo ở trên heroku, ở tab Deploy chọn git sau đó deploy vào heroku để sử dụng nhé.
+
+# Lấy bot TOKEN
+Vào botfather của telegram để lấy TOKEN
