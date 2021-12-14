@@ -1,4 +1,4 @@
 # tele-bot
 
-#Hướng dẫn
+# Hướng dẫn
 Chỉ cần deploy vào heroku để sử dụng bot
