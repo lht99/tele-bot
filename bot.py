@@ -27,42 +27,51 @@ def nothing(update, context):
 def start(update, context):
     update.message.reply_text('Xin chào, mình lập Bot này để hỗ trợ mọi người tải file pdf từ sci-hub')
 def sci(update, context):
+    ids = update.message.message_id
+    chat_id = update.message.chat_id
+    #Add headers for preventing 403 error reponse
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+    ur = update.message.text
+    sci_url = 'https://sci-hub.se/' + str(ur)
+    html_text = requests.request('GET', sci_url, headers=headers).text
+    soup = bs(html_text, 'html.parser')
+    link = soup.findAll("button")
+    title = soup.findAll('i')
     try:
-        ids = update.message.message_id
-        chat_id = update.message.chat_id
-        ur = update.message.text
-        sci_url = 'https://sci-hub.se/' + str(ur)
-        html_text = requests.get(sci_url).text
-        soup = bs(html_text, 'html.parser')
-        link = soup.findAll("button")
-        title = soup.findAll('i')
-        link1 = link[0]
-        link2 = link1
-        link3 = link2["onclick"]
-        link4 = link3.split("'")
-        link5 = link4[1]
-        if link5[:2] == "//":
-            link6 = link5.replace("//", "http://")
-            update.message.reply_text(link6)
+        if len(link) != 0:
+            link1 = link[0]["onclick"].split("'")[1]
+            if link1[:2] == "//":
+                link6 = "https:" + link1
+                update.message.reply_text(link6)
+            else:
+                link6 = link1
+                update.message.reply_text(link6)
+            if len(title) != 0:
+                title1 = title[0].text.split(".")[0]
+                title2 = title1 + ".pdf"
+            else:
+                title2 = "your_file.pdf"
+            response = requests.get(link6)
+            with open(title2, 'wb') as f:
+                f.write(response.content)
+            file_size = os.path.getsize(title2)
+            #Check file size and send or just give link to download
+            if file_size < 50000000:
+                update.message.reply_text("Your output file: \n")
+                context.bot.send_document(chat_id, open(
+                    title2, 'rb'),  reply_to_message_id=ids)
+            else:
+                update.message.reply_text(
+                    "Your file is too big \nClick link to down load")
+                update.message.reply_text(link6)
         else:
-            link6 = link5
-            update.message.reply_text(link6)
-
-        title1 = title[0].text.split(".")[0]
-        if len(title1) == 0:
-            title2 = "your file.pdf"
-        else:
-            title2 = title1 + ".pdf"
-        response = requests.get(link6)
-        with open(title2, 'wb') as f:
-            f.write(response.content)
-        f.close()
-        update.message.reply_text("Your output file: \n")
-        context.bot.send_document(chat_id, open(title2, 'rb'),  reply_to_message_id=ids)
-
-    except:
-        update.message.reply_text("File not found or Too big to send")
-
+            text = str(requests.request('GET', sci_url, headers=headers).status_code) + " ERROR CODE. From_user: " + str(update.message.from_user['username'])
+            update.message.reply_text("Look like link is not found Or Wrong Link")
+            #context.bot.send_message('chat_id', text)
+            #Send error to somewhere
+            
+    except IndexError:
+        update.message.reply_text("__ERROR__")
 def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
